@@ -5,23 +5,21 @@ import matplotlib
 from math import *
 import numpy as np
 import paths as paths
+from util import Utility
 
 
 from DataBaseProxy import DataBaseProxy
 dbp = DataBaseProxy()
+util = Utility()
 
 year = 2017
 month = 5
 day = 17
 
-#car2go_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/car2go_p"
-#enjoy_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/enjoy_p"
-#plots_path= "/home/mc/Scrivania/Tesi/MyTool/plots/01/"
-
 #km macchine per enjoy e car2go in una settimana
 start = datetime.datetime(year, month, day, 0, 0, 0)
 end = datetime.datetime(year, month +1, day, 23, 59, 0)
-end2 = datetime.datetime(year, 7, 23, 23,59,0)
+end2 = datetime.datetime(year, month, day, 23,59,0)
 
 #
 #enjoy = dbp.query_bookings_df("enjoy","Torino", start, end)
@@ -61,7 +59,8 @@ def total_dist_per_car(df):
     plt.title("km per car - " + dbp.get_provider(df))
     plt.ylabel("km")
     plt.xlabel("plates")
-    plt.savefig(paths.plots_path+provider+"_dist_per_car.png")
+#    plt.savefig(paths.plots_path+provider+"_dist_per_car.png")
+    plt.savefig(paths.plots_path2+provider+"_dist_per_car.png")
     plt.show()
     return dist_per_car
         
@@ -85,7 +84,8 @@ def total_dist_per_car_no_outliers (df):
     plt.title("km per car normalized - " + dbp.get_provider(df))
     plt.ylabel("Km")
     plt.xlabel("plates")
-    plt.savefig(paths.plots_path+provider+"_dist_per_car_no_out.png")
+#    plt.savefig(paths.plots_path+provider+"_dist_per_car_no_out.png")
+    plt.savefig(paths.plots_path2+provider+"_dist_per_car_no_out.png")
     plt.show()
     return
     
@@ -110,7 +110,8 @@ def fuel_behavior_max_distnace(df):
     plt.legend()
     plt.ylabel("Fuel level")
     plt.xlabel("Chrological rent ID")
-    plt.savefig(paths.plots_path+provider+"_fuel_behav_max_dist.png")
+#    plt.savefig(paths.plots_path+provider+"_fuel_behav_max_dist.png")
+    plt.savefig(paths.plots_path2+provider+"_fuel_behav_max_dist.png")
     plt.show()
 
     return fuel_cons
@@ -131,7 +132,8 @@ def fuel_behavior_max_booked(df):
     plt.legend()
     plt.ylabel("Fuel level")
     plt.xlabel("Chrological rent ID")
-    plt.savefig(paths.plots_path+provider+"_fuel_behav_most_booked.png")
+#    plt.savefig(paths.plots_path+provider+"_fuel_behav_most_booked.png")
+    plt.savefig(paths.plots_path2+provider+"_fuel_behav_most_booked.png")
     plt.show()
     return fuel_cons
     
@@ -152,7 +154,9 @@ def pdf_distance(df_source, df_dist):
     ax[1,1].hist(df_dist.distance, 50, facecolor=color, alpha=0.75)
     ax[1,0].set_title("filtered PDF - durations")
 
-    plt.savefig(paths.plots_path+provider+"_PDF_CDF.png")
+#    plt.savefig(paths.plots_path+provider+"_PDF_CDF.png")
+    plt.savefig(paths.plots_path2+provider+"_PDF_CDF.png")
+
     plt.show()
     return 
 
@@ -173,36 +177,44 @@ def valid_days(df):
     fig, ax = plt.subplots(1, 1, figsize=(9,10))
     plt.title("Entry per days - " + provider)
     df2.plot(color=color)
-    fig.savefig(paths.plots_path+provider+"_valid_days.png")
+#    fig.savefig(paths.plots_path+provider+"_valid_days.png")
+    fig.savefig(paths.plots_path2+provider+"_valid_days.png")
+
+    return
+
+def gd_vs_ed_hist(df_dist, provider, color):
+    fig, ax = plt.subplot(1,1,(9,10))
+    df_dist.dr_minus_dist.hist(ax=ax, cumulative=True, color=color, bins =500)
+    plt.show()
     return
     
-
 
 enjoy = pd.read_pickle(paths.enjoy_pickle_path, None)
 car2go = pd.read_pickle(paths.car2go_pickle_path, None)
 
 
-valid_days(enjoy)
-valid_days(car2go)
-
-enj_dist = total_dist_per_car(enjoy)
-total_dist_per_car_no_outliers(enjoy)
-pdf_distance(enjoy, enj_dist)
-fuel_behavior_max_distnace(enjoy)
-fuel_cons = fuel_behavior_max_booked(enjoy)
-
-c2g_dist = total_dist_per_car(car2go)
-total_dist_per_car_no_outliers(car2go)
-pdf_distance(car2go, c2g_dist)
-fuel_cons  = fuel_behavior_max_distnace(car2go)
-fuel_behavior_max_booked(car2go)
-
-fuel_cons['diff'] = fuel_cons['init_fuel'] - fuel_cons['final_fuel']
+#valid_days(enjoy)
+#valid_days(car2go)
+#
+#enj_dist = total_dist_per_car(enjoy)
+#total_dist_per_car_no_outliers(enjoy)
+#pdf_distance(enjoy, enj_dist)
+#fuel_behavior_max_distnace(enjoy)
+#fuel_cons = fuel_behavior_max_booked(enjoy)
+#
+#c2g_dist = total_dist_per_car(car2go)
+#total_dist_per_car_no_outliers(car2go)
+#pdf_distance(car2go, c2g_dist)
+#fuel_cons  = fuel_behavior_max_distnace(car2go)
+#fuel_behavior_max_booked(car2go)
+#
+#fuel_cons['diff'] = fuel_cons['init_fuel'] - fuel_cons['final_fuel']
 
 
 '''
-cerco macchine che hanno poche prenotazioni nell'active booking
+cerco macchine che hanno poche prenotazioni nell'active booking 
 '''
+#enj_dist_ok = enj_dist[(enj_dist["distance"] > 30)]
 #enj_dist_not_ok = enj_dist[~enj_dist.isin(enj_dist_ok)].dropna()
 #plates = enj_dist_not_ok['plate'].tolist()
 #for pos in range(0, len(plates)):
@@ -221,12 +233,43 @@ cerco macchine che hanno poche prenotazioni nell'active booking
 #car_per_city["log"] = np.log10(car_per_city["bookings_per_car"])
 #car_per_city.bookings_per_car.plot(color=dbp.get_color(enjoy), marker='o', linewidth=0)
 
+'''
+prendo i rental (ed elimino anche le entry senza google distnace)
+'''
+enjoy_distances = enjoy[enjoy.distance>20] #macchine che si sono spostate
+enjoy_distances = enjoy_distances[enjoy_distances.distance_dr != -1] #cars with valid entry of google_dir
+enjoy_distances["dr_minus_dist"] = enjoy_distances["distance_dr"] - enjoy_distances["distance"]
+enjoy_distances = enjoy_distances[
+        (enjoy_distances["dr_minus_dist"] >= enjoy_distances["dr_minus_dist"].quantile(0.01)) &
+        (enjoy_distances["dr_minus_dist"] <= enjoy_distances["dr_minus_dist"].quantile(0.99)) ]
+gd_vs_ed_hist(enjoy_distances, util.get_provider(enjoy), util.get_color(enjoy))
 
 
+     
+c2g_distances = car2go[car2go.distance>20] #macchine che si sono spostate
+#c2g_distances = c2g_distances[c2g_distances.distance_dr!= -1] #cars with valid entry of google_dir
+c2g_invalid = c2g_distances[c2g_distances.distance_dr == -1] #cars with valid entry of google_dir
+print len(c2g_invalid)
+#c2g_distances["dr_minus_dist"] = c2g_distances["distance_dr"] - c2g_distances["distance"]
+#c2g_distances = c2g_distances[
+#        (c2g_distances["dr_minus_dist"] >= c2g_distances["dr_minus_dist"].quantile(0.01)) &
+#        (c2g_distances["dr_minus_dist"] <= c2g_distances["dr_minus_dist"].quantile(0.99)) ]
+#c2g_distances.dr_minus_dist.hist(cumulative=True, color="blue", bins=500)
 
-
-
-
+#zzz_check_df_2 = enjoy_distances.filter([
+#        "plate", 
+#        "init_address", 
+#        "final_address", 
+#        "city",
+#        "distance", 
+#        "distance_dr", 
+#        "eucl_minus_dr",
+#        "start_lat",
+#        "start_lon",
+#        "end_lat",
+#        "end_lon",
+#        "init_date"],axis=1)
+#  
 
 
 

@@ -8,3 +8,4 @@ enjoy_disap_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/desappeared_ca
 car2go_disap_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/desappeared_cars_car2go_p"
 
 plots_path= "/home/mc/Scrivania/Tesi/MyTool/plots/01/"
+plots_path2= "/home/mc/Scrivania/Tesi/MyTool/plots/02/"
