@@ -113,8 +113,8 @@ class DataBaseProxy (object):
             bookings_df['arrival_time_pt'] = bookings_df.public_transport.apply(lambda x : x['arrival_time'] )
             bookings_df = bookings_df.drop('public_transport',1)
             
-#            bookings_df = bookings_df[(bookings_df["init_address"].str.contains("10... Torino")) &
-#                                      (bookings_df["final_address"].str.contains("10... Torino"))]            
+            bookings_df = bookings_df[(bookings_df["init_address"].str.contains("10... Torino")) &
+                                      (bookings_df["final_address"].str.contains("10... Torino"))]            
 
 
             return bookings_df

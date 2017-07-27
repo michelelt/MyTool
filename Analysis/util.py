@@ -3,8 +3,12 @@ import datetime
 import matplotlib.pyplot as plt
 
 class Utility (object):
-    
+
     def __init__ (self):
+        self.enj_fleet = 315
+        self.enj_valid_days = 23
+        self.c2g_fleet = 395
+        self.c2g_valid_days = 20
         return
         
         
