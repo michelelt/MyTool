@@ -14,6 +14,18 @@ def haversine(lon1, lat1, lon2, lat2):
     km = 6367 * c
     return int(km*1000)
 
+regex ={
+        "Torino" : "10... Torino",
+        "Milano" : "20... Milano",
+        "Firenze" : "50... Firenze",
+        "Roma" : "00... Roma",
+        "Catania" : "95... Catania"
+        }
+
+
+
+#print haversine(7.60, 45.20, 7.85, 45.20)
+
 import datetime
 import pandas as pd
 import numpy as np
@@ -113,8 +125,9 @@ class DataBaseProxy (object):
             bookings_df['arrival_time_pt'] = bookings_df.public_transport.apply(lambda x : x['arrival_time'] )
             bookings_df = bookings_df.drop('public_transport',1)
             
-            bookings_df = bookings_df[(bookings_df["init_address"].str.contains("10... Torino")) &
-                                      (bookings_df["final_address"].str.contains("10... Torino"))]            
+            bookings_df = bookings_df[(bookings_df["init_address"].str.contains(regex[city])) &
+                                      (bookings_df["final_address"].str.contains(regex[city]))
+                                      ]            
 
 
             return bookings_df
@@ -164,6 +177,7 @@ class DataBaseProxy (object):
             
             parkings_df['duration'] =parkings_df.final_date - parkings_df.init_date 
             parkings_df['duration'] = parkings_df['duration'].apply(lambda x: x.days*24*60 + x.seconds/60)
+            parkings_df = parkings_df[(parkings_df["address"].str.contains(regex[city]))]  
 
             return parkings_df
         
