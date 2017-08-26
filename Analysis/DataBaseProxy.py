@@ -15,8 +15,8 @@ def haversine(lon1, lat1, lon2, lat2):
     return int(km*1000)
 
 regex ={
-        "Torino" : "10... Torino",
-        "Milano" : "20... Milano",
+        "Torino" : " #10... T#",
+        "Milano" : "20... # Milano",
         "Firenze" : "50... Firenze",
         "Roma" : "00... Roma",
         "Catania" : "95... Catania"
@@ -59,6 +59,7 @@ class DataBaseProxy (object):
         self.db = client[MONGO_DB]
 
     def query_bookings(self, vendor, city, start, end):
+        # porta nuova 45.0625, 7.678889
         if (vendor == "enjoy") :
             return self.db["enjoy_PermanentBookings"].find(
                     {'init_date':
@@ -66,7 +67,8 @@ class DataBaseProxy (object):
                                        '$gt': start,
                                        '$lt': end
                                    },
-                    'city' : city
+                    'city' : city,
+
                     }).sort([("_id", 1)]) 
         elif (vendor == "car2go") :
             return self.db["PermanentBookings"].find(
@@ -75,14 +77,15 @@ class DataBaseProxy (object):
                                        '$gt': start,
                                        '$lt': end
                                    },
-                    'city' : city
+                    'city' : city,
+                    
                     }).sort([("_id", 1)]) 
         else:
             return "err"
         
     def query_bookings_df(self, vendor, city, start, end):
         books_cursor = self.query_bookings(vendor, city, start, end)
-        if (books_cursor == "err" or books_cursor.count() == 0):
+        if (books_cursor == "err from cursor" or books_cursor.count() == 0):
             return "err"
         else :
 #            print books_cursor.count()
@@ -103,12 +106,12 @@ class DataBaseProxy (object):
             bookings_df['end'] = bookings_df.coordinates.apply(lambda x : x[1])
             bookings_df = bookings_df.drop('coordinates',1)
             
-            bookings_df['start_lon'] = bookings_df.start.apply(lambda x : str(x[0]) )
-            bookings_df['start_lat'] = bookings_df.start.apply(lambda x : str(x[1]) )
+            bookings_df['start_lon'] = bookings_df.start.apply(lambda x : float(x[0]) )
+            bookings_df['start_lat'] = bookings_df.start.apply(lambda x : float(x[1]) )
             bookings_df = bookings_df.drop('start',1)
-            
-            bookings_df['end_lon'] = bookings_df.end.apply(lambda x : str(x[0]) )
-            bookings_df['end_lat'] = bookings_df.end.apply(lambda x : str(x[1]) )
+                      
+            bookings_df['end_lon'] = bookings_df.end.apply(lambda x : float(x[0]) )
+            bookings_df['end_lat'] = bookings_df.end.apply(lambda x : float(x[1]) )
             bookings_df = bookings_df.drop('end', 1)
             
             bookings_df['distance'] = bookings_df.apply(lambda x : haversine(
@@ -125,10 +128,7 @@ class DataBaseProxy (object):
             bookings_df['arrival_time_pt'] = bookings_df.public_transport.apply(lambda x : x['arrival_time'] )
             bookings_df = bookings_df.drop('public_transport',1)
             
-            bookings_df = bookings_df[(bookings_df["init_address"].str.contains(regex[city])) &
-                                      (bookings_df["final_address"].str.contains(regex[city]))
-                                      ]            
-
+            bookings_df = bookings_df[ bookings_df["start_lon"] <= 7.8]  
 
             return bookings_df
         
@@ -144,7 +144,13 @@ class DataBaseProxy (object):
                                        '$gt': start,
                                        '$lt': end
                                    },
-                    'city' : city
+                    'city' : city,
+#                    'loc' : { 
+#                            '$near' : {
+#                                    '$geometry' : { 'type' : "Point" ,
+#                                                    'coordinates' : [ 7.678889, 45.0625 ] } ,
+#                            '$maxDistance' : 50000 }
+#                            }
                     }).sort([("_id", 1)]) 
         elif (vendor == "car2go") :
             return self.db["PermanentParkings"].find(
@@ -153,7 +159,13 @@ class DataBaseProxy (object):
                                        '$gt': start,
                                        '$lt': end
                                    },
-                    'city' : city
+                    'city' : city,
+#                    'loc' : { 
+#                            '$near' : {
+#                                    '$geometry' : { 'type' : "Point" ,
+#                                                   'coordinates' : [ 7.678889, 45.0625 ] } ,
+#                            '$maxDistance' : 50000 }
+#                            }
                     }).sort([("_id", 1)]) 
         else:
             return "err"
@@ -171,13 +183,13 @@ class DataBaseProxy (object):
             parkings_df['coordinates'] = parkings_df['loc'].apply(lambda x : x['coordinates'])
             parkings_df = parkings_df.drop('loc',1)
             
-            parkings_df['lon'] = parkings_df.coordinates.apply(lambda x : str(x[0]))
-            parkings_df['lat'] = parkings_df.coordinates.apply(lambda x : str(x[1]))
+            parkings_df['lon'] = parkings_df.coordinates.apply(lambda x : float(x[0]))
+            parkings_df['lat'] = parkings_df.coordinates.apply(lambda x : float(x[1]))
             parkings_df = parkings_df.drop('coordinates',1)
             
             parkings_df['duration'] =parkings_df.final_date - parkings_df.init_date 
             parkings_df['duration'] = parkings_df['duration'].apply(lambda x: x.days*24*60 + x.seconds/60)
-            parkings_df = parkings_df[(parkings_df["address"].str.contains(regex[city]))]  
+            parkings_df = parkings_df[parkings_df["lon"] <= 7.8] 
 
             return parkings_df
         
@@ -203,7 +215,7 @@ class DataBaseProxy (object):
                                            '$gt': start,
                                            '$lt': end
                                        },
-                        'plate' : {'$in': [plate]}
+                        'plate' : {'$in': plate}
                         }).sort([("_id", 1)]) 
             
         if vendor == 'enjoy' :

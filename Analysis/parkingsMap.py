@@ -18,25 +18,16 @@ grid_df = gpd.read_file("../SHAPE/grid.dbf").to_crs({"init": "epsg:4326"})
 def pointfy (lon, lat):
     return Point(float(lon), float(lat))
 
-year = 2017
-month = 5
-day = 17
-start = datetime.datetime(year, month, day, 0, 0, 0)
-end = datetime.datetime(year, month +1, day, 23, 59, 0)
-enjoy = pd.read_pickle(p.enjoy_parkings_pickle_path, None)
-car2go = pd.read_pickle(p.car2go_parkings_pickle_path, None)
-#v_enj = u.get_valid_days(enjoy, start,end)
-#v_enj = v_enj[v_enj["entries"]>0]
-#print len(v_enj), "enjoy"
-#v_enj = u.get_valid_days(car2go, start,end)
-#v_enj = v_enj[v_enj["entries"]>0]
-#print len(v_enj), "car2go"
+
+
+pa_enjoy = pd.read_pickle(p.enjoy_parkings_pickle_path, None)
+pa_car2go = pd.read_pickle(p.car2go_parkings_pickle_path, None)
 
 
 def parkings_per_zone(df_in, valid_days, fleet, q):
 #    turin = gpd.read_file("../SHAPE/Zonizzazione.dbf").to_crs({"init": "epsg:4326"})
     
-    turin = gpd.read_file("../SHAPE/grid.dbf").to_crs({"init": "epsg:4326"})
+    turin = gpd.read_file("../SHAPE/grid500.dbf").to_crs({"init": "epsg:4326"})
     
     df_in = df_in[df_in.duration > 20]
     df_in['geometry'] = df_in.apply(lambda row: pointfy(row['lon'], row['lat']), axis = 1)
@@ -93,10 +84,10 @@ def plot_clorophlet_colorbar (gdf, column, title, vmin, vmax, provider):
 #    fig.colorbar(sm_, cax=cax)
     cbar = plt.colorbar(sm_, cax=cax)
     cbar.ax.tick_params(labelsize=14)
-    cbar.set_label('avg hour of stop per zone', rotation=270, fontsize=18, labelpad=30)
+    cbar.set_label('Mean car parking time per hour', rotation=270, fontsize=18, labelpad=30)
 #    gdf.apply(lambda x: ax.annotate(s=x.N, xy=(x.geometry.centroid.x, x.geometry.centroid.y), ha='center'),axis=1)
     
-    fig.savefig(paths.plots_path4+provider+"500x500_parkings_amp.png", bbox_inches='tight',dpi=250)
+#    fig.savefig(paths.plots_path4+provider+"500x500_parkings_amp.png", bbox_inches='tight',dpi=250)
     plt.show()
 #    plt.savefig("clorophlet_" + str(column) + "_" + str(slot) + ".pdf", format="pdf")
     
@@ -159,16 +150,24 @@ def cdf_pdf_parking_time_per_zone(df_parkings,bins):
 '''
 c2g - avg time per park in zone
 '''
-turin_c2g, car2go_parkings = parkings_per_zone(car2go, u.c2g_valid_days, u.c2g_fleet, 0.01) 
+q=0.05
+c2g_parkings_filtered = pa_car2go[
+        (pa_car2go["duration"] <= pa_car2go["duration"].quantile(1-q)) & 
+        (pa_car2go["duration"] >= 20 )
+        ]
+C2G_FLEET = 414
+C2G_DAYS = 39
+turin_c2g, car2go_parkings = parkings_per_zone(c2g_parkings_filtered, C2G_DAYS, C2G_FLEET, 0.01) 
 car2go_parkings = car2go_parkings.dropna()
-cdf_pdf_parking_time_per_zone(car2go_parkings,50)
+#cdf_pdf_parking_time_per_zone(car2go_parkings,50)
 #q=0.05
 #df = turin_c2g[
 #        (turin_c2g['factor'] >= turin_c2g['factor'].quantile(q) ) &
-#        (turin_c2g['factor'] <= turin_c2g['factor'].quantile(1-q))]  
-#my_min = df['factor'].min()
-#my_max = df['factor'].max()
-#plot_clorophlet_colorbar(df, 'factor', "parkings per zone - car2go",my_min,my_max, "car2go")
+#        (turin_c2g['factor'] <= turin_c2g['factor'].quantile(1-q))]
+df = turin_c2g  
+my_min = df['factor'].min()
+my_max = df['factor'].max()
+plot_clorophlet_colorbar(df, 'factor', "parkings per zone - car2go",my_min,my_max, "car2go")
 
 #plt.scatter(turin_c2g.zone_id, turin_c2g.factor)
 #plt.show()
@@ -184,9 +183,9 @@ cdf_pdf_parking_time_per_zone(car2go_parkings,50)
 '''
 enjoy - avg time per park in zone
 '''
-turin_enj, enjoy_parkings = parkings_per_zone(enjoy, u.enj_valid_days, u.enj_fleet, 0.01)
-enjoy_parkings = enjoy_parkings.dropna()
-cdf_pdf_parking_time_per_zone(enjoy_parkings,50)
+#turin_enj, enjoy_parkings = parkings_per_zone(enjoy, u.enj_valid_days, u.enj_fleet, 0.01)
+#enjoy_parkings = enjoy_parkings.dropna()
+#cdf_pdf_parking_time_per_zone(enjoy_parkings,50)
 
 #df = turin_enj[
 #        (turin_enj['factor'] >= turin_enj['factor'].quantile(q) ) &

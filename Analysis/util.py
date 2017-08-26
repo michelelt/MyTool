@@ -7,7 +7,6 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point, Polygon
 from math import radians,degrees, cos, sin, asin, sqrt, acos
-import matplotlib.pyplot as plt
 
 
 class Utility (object):
@@ -134,7 +133,12 @@ class Utility (object):
     def get_fleet(self, df, days):
         df = pd.DataFrame(df.groupby("plate").count()["_id"]).rename(columns={"_id":"bookings_per_car"})
         df = df[df["bookings_per_car"] > days]
-        return df        
+        return df
+
+    def get_fleet_in_date (self, df, start, end, days):
+        df = df[(df["init_date"]>= start) & 
+                (df["init_date"]<= end)]
+        return self.get_fleet(df)        
                     
 
 

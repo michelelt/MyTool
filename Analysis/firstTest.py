@@ -13,17 +13,21 @@ dbp = DataBaseProxy()
 util = Utility()
 
 year = 2017
-month = 5
-day = 6
+month = 6
+day = 19
 
 #km macchine per enjoy e car2go in una settimana
 start = datetime.datetime(year, month, day, 0, 0, 0)
-end = datetime.datetime(year, month +2, day, 23, 59, 0)
-end2 = datetime.datetime(year, month, day, 23,59,0)
+end = datetime.datetime(year, month, day, 23, 59, 0)
 
 #
 #enjoy = dbp.query_bookings_df("enjoy","Torino", start, end)
+#enjoy_p = dbp.query_parkings_df("enjoy", "Torino", start,end)
+#enjoy_2 = enjoy[enjoy["duration"]< 120]
+#enjoy_2.duration.hist(bins=50, color='red')
 #car2go = dbp.query_bookings_df("car2go","Torino", start, end)
+#car2go_p = dbp.query_parkings_df("car2go","Torino", start, end)
+
 #enjoy.to_pickle(paths.enjoy_pickle_path, None)
 #car2go.to_pickle(paths.car2go_pickle_path, None)
 
@@ -166,7 +170,6 @@ def hist_cdf_pdf(df_source, df_dist, column, valid_days, valid_days_clnd):
     res[column+"_median"] = df_dist[column].median()
     res[column+"_std"] = df_dist[column].std()
 
-
     ## filtering ##
     df_dist2 = util.clean_df(df_dist, column, df_dist[column].median(), df_dist[column].std())
     
@@ -252,12 +255,13 @@ def gd_vs_ed_hist(df_dist, provider, color):
     return
     
 
-enjoy = pd.read_pickle(paths.enjoy_pickle_path, None)
-car2go = pd.read_pickle(paths.car2go_pickle_path, None)
+#enjoy = pd.read_pickle(paths.enjoy_pickle_path, None)
+#car2go = pd.read_pickle(paths.car2go_pickle_path, None)
 enj_data = {}
 c2g_data = {}
-enj_data["general"] = util.get_valid_days(enjoy,start,end)
-c2g_data["general"] = util.get_valid_days(car2go,start,end)
+#enj_data["general"] = util.get_valid_days(enjoy,start,end)
+#c2g_data["general"] = util.get_valid_days(car2go,start,end)
+
 
 
 
@@ -306,13 +310,17 @@ c2g_data["general"] = util.get_valid_days(car2go,start,end)
 #fuel_behavior_max_booked(car2go)
 
 '''
-cerco macchine che hanno poche prenotazioni nell'active booking 
+cerco macchine con cuty sbagliata
 '''
+
 #enj_dist_ok = enj_dist[(enj_dist["distance"] > 30)]
 #enj_dist_not_ok = enj_dist[~enj_dist.isin(enj_dist_ok)].dropna()
+#
 #plates = enj_dist_not_ok['plate'].tolist()
+#print len(plates)
 #for pos in range(0, len(plates)):
 #    plates[pos] = str(plates[pos])
+#
 #disappeared_cars = dbp.query_car_per_plate_df("enjoy", plates, start,end)
 #disappeared_cars.to_pickle(paths.enjoy_disap_pickle_path, None)
 #grouped = pd.DataFrame(disappeared_cars.groupby(["plate", "city"]).size())
@@ -323,13 +331,24 @@ cerco macchine che hanno poche prenotazioni nell'active booking
 #grouped["plate_col"] = grouped.temp.apply(lambda row: row[0])
 #grouped["city_col"] = grouped.temp.apply(lambda row: row[1])
 #del grouped["temp"]
-#car_per_city = grouped.groupby('city').sum()
+#
+#car_per_city = grouped.groupby('city').count()
 #car_per_city["log"] = np.log10(car_per_city["bookings_per_car"])
 #car_per_city.bookings_per_car.plot(color=dbp.get_color(enjoy), marker='o', linewidth=0)
+
+#enjoy_torino = dbp.query_bookings_df("enjoy","Torino", start, end)
+#enjoy_milano = dbp.query_bookings_df("enjoy","Milano", start, end)
+#enjoy_firenze = dbp.query_bookings_df("enjoy","Firenze", start, end)
+#enjoy_roma = dbp.query_bookings_df("enjoy","Roma", start, end)
+#enjoy_catania = dbp.query_bookings_df("enjoy"," Catania", start, end)
+
+#enjoy = pd.DataFrame()
+#enjoy.append([enjoy_torino, enjoy_firenze, enjoy_milano, enjoy_roma, enjoy_catania], ignore_index=True)
 
 '''
 prendo i rental (ed elimino anche le entry senza google distnace)
 '''
+#enjoy = enj_bookings_filtered
 #enjoy_distances = enjoy[enjoy.distance>20] #macchine che si sono spostate
 #enjoy_distances = enjoy_distances[enjoy_distances.distance_dr != -1] #cars with valid entry of google_dir
 #enjoy_distances["dr_over_dist"] = enjoy_distances["distance_dr"] / enjoy_distances["distance"]
@@ -340,7 +359,7 @@ prendo i rental (ed elimino anche le entry senza google distnace)
 #gd_vs_ed_hist(enjoy_distances, util.get_provider(enjoy), util.get_color(enjoy))
 #
 #
-#     
+#car2go = c2g_bookings_filtered     
 #c2g_distances = car2go[car2go.distance>20] #macchine che si sono spostate
 #c2g_distances = c2g_distances[c2g_distances.distance_dr!= -1] #cars with valid entry of google_dir
 ##c2g_invalid = c2g_distances[c2g_distances.distance_dr == -1] #cars with valid entry of google_dir
@@ -350,7 +369,7 @@ prendo i rental (ed elimino anche le entry senza google distnace)
 #        (c2g_distances["dr_over_dist"] <= c2g_distances["dr_over_dist"].quantile(0.99)) ]
 ##c2g_distances.dr_minus_dist.hist(normed=True, cumulative=True, color="blue", bins=500)
 #gd_vs_ed_hist(c2g_distances, util.get_provider(car2go), util.get_color(car2go))
-
+#
 #print "car2go" 
 #print c2g_distances.dr_over_dist.quantile(0.9)
 #print c2g_distances.dr_over_dist.quantile(0.95)
@@ -386,6 +405,8 @@ fuel consuption vs distnace eucl
 #
 #fig.savefig(paths.plots_path3+"_scatter_fuel_diff.png", bbox_inches='tight')
 #fig.show()
+
+
 
 
 
