@@ -47,18 +47,26 @@ def plot_from_df (df, provider, algorithm, ppz, parameter):
     
         ax = fig.gca()
         ax.set_title("Deaths vs Number of PS", fontsize=36)
+        ax.grid()
         for alg in algorithm:
         
             inside = df[
                 (df["provider"]==provider) &
-                (df["ppz"] == ppz) &
+                (df["ppz"] == 3) &
                 (df["algorithm"] == alg)]
             if parameter == "median":
                 ax.plot(inside["p"], inside["median_dpc"], color=colors[alg], label=alg)
                 ax.set_ylabel("Median number of death per car")
             else :
-                ax.plot(inside["p"], inside["tot_deaths"], color=colors[alg], label=alg)
+                ax.plot(inside["p"], inside["tot_deaths"].div(1), color=colors[alg], label=alg, marker="o")
                 ax.set_ylabel("Total number of deaths")
+                inside = df[
+                    (df["provider"]==provider) &
+                    (df["ppz"] == 9) &
+                    (df["algorithm"] == alg)]
+                ax.plot(inside["p"], inside["tot_deaths"].div(1), color=colors[alg], 
+                        label=alg+" ppz=9", linestyle="--", marker="x")
+
         
         ax.set_xlabel("Total number of power supply")
         plt.legend(fontsize=18)
@@ -70,7 +78,7 @@ def return_path(cso, alg, ppz, z):
         return string
 
 if __name__ == "__main__":
-    ## build the city ##
+    # build the city ##
     year = 2017
     month = 5
     day = 6
@@ -83,7 +91,7 @@ if __name__ == "__main__":
     torino.get_fleet("enjoy")
     
     ## parameter for the parallel simulation ##
-    n_z = range(5,205, 50)
+    n_z = range(10,260, 50)
     n_ppz = [3, 9]
     commands = {}
     j=0
@@ -114,17 +122,15 @@ if __name__ == "__main__":
     
     for p in process_list:
         p.join()
-        
     print time.time() - init_time
     
-    res = pd.DataFrame()
     
     ## rebuilding the resutls
+    res = pd.DataFrame()
     for node in node_sim_list:
         res = res.append(pd.read_pickle(node["out"]), ignore_index=True)
+#   
     
-    
-    plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 3, "tot" )
     plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 9, "tot" )
 
 

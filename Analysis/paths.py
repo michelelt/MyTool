@@ -1,8 +1,14 @@
-car2go_booking_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/car2go_p"
-enjoy_booking_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/enjoy_p"
+car2go_bookings_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/car2go_p"
+enjoy_bookings_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/enjoy_p"
+
+car2go_bookings_picke_path_zoned = "/home/mc/Scrivania/Tesi/MyTool/pickles/car2go_zoned"
+enjoy_bookings_picke_path_zoned = "/home/mc/Scrivania/Tesi/MyTool/pickles/enjoy_zoned"
 
 car2go_parkings_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/car2go_parkings_p"
 enjoy_parkings_pickle_path =  "/home/mc/Scrivania/Tesi/MyTool/pickles/enjoy_parkings_p"
+
+car2go_parkings_pickle_path_zoned = "/home/mc/Scrivania/Tesi/MyTool/pickles/car2go_parkings_zoned"
+enjoy_parkings_pickle_path_zoned =  "/home/mc/Scrivania/Tesi/MyTool/pickles/enjoy_parkings_zoned"
 
 enjoy_disap_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/desappeared_cars_enjoy_p"
 car2go_disap_pickle_path = "/home/mc/Scrivania/Tesi/MyTool/pickles/desappeared_cars_car2go_p"
@@ -13,3 +19,4 @@ plots_path  = "/home/mc/Scrivania/Tesi/MyTool/plots/01/"
 plots_path2 = "/home/mc/Scrivania/Tesi/MyTool/plots/02/"
 plots_path3 = "/home/mc/Scrivania/Tesi/MyTool/plots/03/"
 plots_path4 = "/home/mc/Scrivania/Tesi/MyTool/plots/04/"
+plots_path6 = "/home/mc/Scrivania/Tesi/MyTool/plots/06/"
