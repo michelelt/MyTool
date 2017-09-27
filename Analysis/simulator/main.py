@@ -41,36 +41,52 @@ def worker(node):
             resutls = resutls.append(row, ignore_index=True)
         resutls.to_pickle(node["out"])
 
-def plot_from_df (df, provider, algorithm, ppz, parameter):
-        fig = plt.figure(figsize=(10,10))
+def plot_from_df (df, torino, provider, algorithm, ppz, parameter):
+        fig = plt.figure(figsize=(30,10))
         colors = {"max_avg_time":"red", "max_parking":"blue", "rnd": "black"}
     
         ax = fig.gca()
-        ax.set_title("Deaths vs Number of PS", fontsize=36)
+        ax.set_title(provider + " Deaths prob. vs Zones with PS", fontsize=36)
         ax.grid()
+        
+        if provider == "car2go":
+            nob = len(torino.car2go)
+        else:
+            nob = len(torino.enjoy)
         for alg in algorithm:
         
             inside = df[
                 (df["provider"]==provider) &
-                (df["ppz"] == 3) &
+                (df["ppz"] == 2) &
                 (df["algorithm"] == alg)]
             if parameter == "median":
-                ax.plot(inside["p"], inside["median_dpc"], color=colors[alg], label=alg)
+                ax.plot(inside["z"], inside["median_dpc"], color=colors[alg], label=alg)
                 ax.set_ylabel("Median number of death per car")
             else :
-                ax.plot(inside["p"], inside["tot_deaths"].div(1), color=colors[alg], label=alg, marker="o")
+                ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
+                        label=alg+" ppz=2", marker="o")
                 ax.set_ylabel("Total number of deaths")
+                
                 inside = df[
                     (df["provider"]==provider) &
-                    (df["ppz"] == 9) &
+                    (df["ppz"] == 4) &
                     (df["algorithm"] == alg)]
-                ax.plot(inside["p"], inside["tot_deaths"].div(1), color=colors[alg], 
-                        label=alg+" ppz=9", linestyle="--", marker="x")
+                ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
+                        label=alg+" ppz=4", linestyle=":", marker="^")
+
+                
+                inside = df[
+                    (df["provider"]==provider) &
+                    (df["ppz"] == 10) &
+                    (df["algorithm"] == alg)]
+                ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
+                        label=alg+" ppz=10", linestyle="--", marker="x")
+                
 
         
         ax.set_xlabel("Total number of power supply")
         plt.legend(fontsize=18)
-    #    plt.savefig(paths.)
+        plt.savefig(paths.plots_path7+provider+"_zone", bbox_inches = 'tight',pad_inches = 0.25)
         plt.show()
 
 def return_path(cso, alg, ppz, z):
@@ -91,8 +107,8 @@ if __name__ == "__main__":
     torino.get_fleet("enjoy")
     
     ## parameter for the parallel simulation ##
-    n_z = range(10,260, 50)
-    n_ppz = [3, 9]
+    n_z = range(5,205, 5)
+    n_ppz = [2,4,10]
     commands = {}
     j=0
     for cso in ["car2go", "enjoy"]:
@@ -112,26 +128,28 @@ if __name__ == "__main__":
     process_list = []
     for i in commands.keys():
         node_sim_list.append(commands[i])
-        
-    ## run
-    init_time = time.time()
-    for node in node_sim_list:
-        p = Process(target=worker, args=(node,))
-        process_list.append(p)
-        p.start()
-    
-    for p in process_list:
-        p.join()
-    print time.time() - init_time
+#        
+#    ## run
+#    init_time = time.time()
+#    for node in node_sim_list:
+#        p = Process(target=worker, args=(node,))
+#        process_list.append(p)
+#        p.start()
+#    
+#    for p in process_list:
+#        p.join()
+#    print time.time() - init_time
     
     
     ## rebuilding the resutls
     res = pd.DataFrame()
     for node in node_sim_list:
         res = res.append(pd.read_pickle(node["out"]), ignore_index=True)
-#   
+      
+    plot_from_df(res, torino, "car2go", ["max_avg_time", "rnd", "max_parking"], 4, "tot" )
+    plot_from_df(res, torino, "enjoy", ["max_avg_time", "rnd", "max_parking"], 4, "tot" )
     
-    plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 9, "tot" )
-
+#    plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
+#    plot_from_df(res, "enjoy", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
 
 
