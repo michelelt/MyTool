@@ -38,7 +38,7 @@ class Car (object):
         self.current_capacity = self.current_capacity - dc
         if self.current_capacity <= 0:
             self.deaths = self.deaths + 1
-            self.current_capacity = self.capacity
+            self.current_capacity = 0
         return dc
     
     def compute_recharge(self, station, cb):
@@ -78,6 +78,14 @@ class Car (object):
         df["cc"] = self.current_capacity
         df["deaths"] = self.deaths
         return df
+    
+    def to_dict(self):
+        d = {}
+        d["capacity"] = self.capacity
+        d["current_capacity"]  = self.current_capacity
+        d["charging"] = self.in_charge
+        d["deaths"] = self.deaths
+        return d
         
         
     

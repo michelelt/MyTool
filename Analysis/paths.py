@@ -21,3 +21,8 @@ plots_path3 = "/home/mc/Scrivania/Tesi/MyTool/plots/03/"
 plots_path4 = "/home/mc/Scrivania/Tesi/MyTool/plots/04/"
 plots_path6 = "/home/mc/Scrivania/Tesi/MyTool/plots/06/"
 plots_path7 = "/home/mc/Scrivania/Tesi/MyTool/plots/07/"
+plots_path8 = "/home/mc/Scrivania/Tesi/MyTool/plots/08/"
+
+
+sim_path_nrad = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_nrad/"
+sim_path_rnd = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_rnd"

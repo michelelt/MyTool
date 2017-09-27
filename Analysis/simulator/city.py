@@ -16,6 +16,10 @@ from shapely.geometry import Point, Polygon
 from station import Station
 import threading
 from multiprocessing import Process
+import matplotlib.pyplot as plt
+from matplotlib import colors
+
+
 
 util = Utility()
 
@@ -32,22 +36,26 @@ class City (object):
         self.crs = {"init": "epsg:4326"}
         self.turin = gpd.read_file("../../SHAPE/grid500.dbf").to_crs(self.crs)
         self.stations={}
+
+
         return
         
     def parkings_analysis(self, df, days=0):
         g = pd.DataFrame(df.groupby("zone").count()["plate"]).rename(columns={"plate":"parking_per_zone"})
-        g = g[g["parking_per_zone"] > days]
+        g = g[g["parking_per_zone"] >= days]
         g["duration_per_zone"] = df.groupby("zone").sum()
         g["avg_duration_per_zone"] = 1.0* g["duration_per_zone"] /60/g["parking_per_zone"]
         g.index = g.index.astype(int)
-        return g
+        g["geometry"] = self.turin["geometry"]
+        out = gpd.GeoDataFrame(g)
+        return out
         
     
     def load_parkings(self, provider):
         if provider == "car2go":
             if os.path.exists(paths.car2go_parkings_pickle_path_zoned):
                 self.car2go_parkings = pd.read_pickle(paths.car2go_parkings_pickle_path_zoned)
-                self.car2go_parkings = self.car2go_parkings.sort_values("init_time").sort_values("init_time").dropna()
+                self.car2go_parkings = self.car2go_parkings.sort_values("init_time").dropna()
             else :
                 df1 = self.car2go
                 self.car2go_parkings = pd.DataFrame(columns = ["plate", "city", "geometry", "init_time", "final_time", "duration", "zone"])
@@ -113,7 +121,10 @@ class City (object):
         
         self.car2go = self.car2go.dropna(axis=0).sort_values("init_time")
         self.load_parkings("car2go")
-        self.car2go_parkings_analysis = self.parkings_analysis(self.car2go_parkings)
+        self.car2go_parkings_analysis = self.parkings_analysis(self.car2go_parkings, days=self.days)
+        self.car2go_stations_mp = self.car2go_parkings_analysis.sort_values("parking_per_zone", ascending=False)
+        self.car2go_stations_mat = self.car2go_parkings_analysis.sort_values("avg_duration_per_zone", ascending=False)
+
 
 
     
@@ -133,7 +144,9 @@ class City (object):
             
         self.load_parkings("enjoy")
         self.enjoy = self.enjoy.dropna(axis=0).sort_values("init_time")
-        self.enjoy_parkings_analysis = self.parkings_analysis(self.enjoy_parkings)
+        self.enjoy_parkings_analysis = self.parkings_analysis(self.enjoy_parkings, days=self.days)
+        self.enjoy_stations_mp = self.enjoy_parkings_analysis.sort_values("parking_per_zone", ascending=False)
+        self.enjoy_stations_mat = self.enjoy_parkings_analysis.sort_values("avg_duration_per_zone", ascending=False)
 
 
     
@@ -218,8 +231,10 @@ class City (object):
         self.stations = stations
             
         if algorithm == "max_parking":
+#            print "caccca"
             zones = df.sort_values("parking_per_zone", ascending=False)
             zones = zones.iloc[0:max_stat,]
+            
 #            return zones
             for i in range(0,len(zones)):
                 zone = zones.iloc[[i]].index.get_values()[0]
@@ -227,8 +242,7 @@ class City (object):
 #            return df
         
         elif algorithm == "max_avg_time" :
-            zones = df.sort_values("avg_duration_per_zone", ascending=False)
-            zones = zones.iloc[0:max_stat,]
+            zones = df.iloc[0:max_stat,]
             for i in range(0,len(zones)):
                 zone = zones.iloc[[i]].index.get_values()[0]
                 stations[zone] = Station(zone, no_ps_per_station,0, station_type)            
@@ -269,7 +283,7 @@ class City (object):
 #        for i in range (1, len(df)-1):
 #        df.drop("geometry",axis=1, inplace=True)
 #        df = pd.DataFrame(df)
-        pieni =0 
+        pieni = 0 
         for index, row in df.iterrows() :
 #            if i%10000 == 0:
 #                print i
@@ -284,17 +298,18 @@ class City (object):
                 old_cap = c_car.current_capacity
                 rech_z = c_car.last_final_zone()                
                 stations[rech_z].decrease_supplied_cars()
+                stations[rech_z].increase_recharged_counter(c_plate)
                 c_car.compute_recharge(stations[rech_z], c_booking)
             
             if old_cap - c_car.current_capacity < 0:
-                pieni = pieni +1
+                pieni = pieni + 1
                 
                 
 #            fz = c_booking["final_zone"].astype(np.int64)
             fz = int(c_booking["final_zone"])
 
 #            print c_car.current_capacuty, threshold
-            if c_car.current_capacity > threshold:
+            if c_car.current_capacity >= threshold:
                 c_car.compute_consuption(c_booking["distance"] * corrective_factor)
 #                print  fz, type(fz), stations.keys()[3], type(stations.keys()[3]), fz==stations.keys()[3] 
 #                if fz in stations.keys():
@@ -309,9 +324,16 @@ class City (object):
 
             else:
                 refused_bookings +=1
-        
-#        print "refused_bookings " + str(refused_bookings)
+        df = pd.DataFrame.from_records([cars[c].to_dict() for c in cars])
+        self.avg_bat =0
+        self.avg_bat = float(sum(df["current_capacity"]))/len(df)
+
         self.et = time.time()-s
+        self.pieni = pieni
+        self.rech_cars = pd.DataFrame(columns=["disticint_cars_in_zone"])
+        
+        for zone_id in self.stations.keys() :
+            self.rech_cars.loc[zone_id,"disticint_cars_in_zone"] = len(self.stations[zone_id].charged_cars)
         stats = pd.DataFrame()
         for plate in cars :
             row = cars[plate].car2df()
@@ -322,21 +344,38 @@ class City (object):
         
 
 
-#year = 2017
-#month = 5
-#day = 6
-#start = datetime.datetime(year, month, day, 0, 0, 0)
-#end = datetime.datetime(year, month +2, day, 23, 59, 0)
-#torino = City("Torino", start,end)
-#torino.set_c2g_datasets(from_pickle=True)
-#torino.set_enj_datasets(from_pickle=True)
-#torino.get_fleet("car2go")
-#torino.get_fleet("enjoy")
-#torino.place_stations(10,
-#                      1,
-#                      "car2go",
-#                      "max_parking",
-#                      station_type=1)
+year = 2017
+month = 5
+day = 6
+start = datetime.datetime(year, month, day, 0, 0, 0)
+end = datetime.datetime(year, month +2, day, 23, 59, 0)
+torino = City("Torino", start,end)
+torino.set_c2g_datasets(from_pickle=True)
+torino.set_enj_datasets(from_pickle=True)
+torino.get_fleet("car2go")
+torino.get_fleet("enjoy")
+
+ms = time.time()
+torino.place_stations(1,
+                      10,
+                      "car2go",
+                      "max_parking",
+                      station_type=1)
+torino.run("car2go", 0)
+print time.time() - ms
+print torino.avg_bat
+
+ms = time.time()
+torino.place_stations(200,
+                      10,
+                      "car2go",
+                      "max_parking",
+                      station_type=1)
+torino.run("car2go", 0)
+
+print time.time() - ms
+print torino.avg_bat
+
 
 
     
@@ -431,9 +470,6 @@ class City (object):
 #
 #plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 3, "tot" )
 #plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 9, "tot" )
-#
-#
-
 
 
 

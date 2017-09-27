@@ -18,6 +18,8 @@ from station import Station
 import threading
 from multiprocessing import Process
 import matplotlib.pyplot as plt
+from matplotlib import colors
+
 
 ## service functions
 def worker(node):
@@ -86,15 +88,110 @@ def plot_from_df (df, torino, provider, algorithm, ppz, parameter):
         
         ax.set_xlabel("Total number of power supply")
         plt.legend(fontsize=18)
-        plt.savefig(paths.plots_path7+provider+"_zone", bbox_inches = 'tight',pad_inches = 0.25)
+        plt.savefig(paths.plots_path8+provider+"_zone", bbox_inches = 'tight',pad_inches = 0.25)
         plt.show()
+        
+def bar_plot_parkings_stats (df1, provider, column):
+    if provider == "car2go" :
+        color = "blue"
+    else :
+        color = "red"
+        
+    if column == "avg_duration_per_zone":
+        y_label = 'Average parking time per zone'
+        title = provider + ' - zones sorted per maximum avgerage parking time per zone'
+    elif column == "parking_per_zone" :
+        y_label = 'Parkings per zone [h]'
+        title = provider + ' - zones sorted per maxmimum parkings per zone'
+    elif column == "duration_per_zone" :
+        y_label = "Total durations per zone [h]"
+        title = provider + ' - zones sorted per total duration per zone'
+    else :
+        print "No column"
+        return
+
+    df1 = df1.sort_values(column, ascending=False)
+    width=0.5
+    ind = np.arange(len(df1.index))
+    fig, ax = plt.subplots(figsize=(40,10))
+    ax.bar(ind, df1[column], width, color=color)
+    
+    ax.set_ylabel(y_label)
+    ax.set_xlabel("Zones")
+    ax.set_title(title)
+    ticks = [""]*len(df1.index)
+    ticks[0:len(df1.index):8] = df1.index[range(0,len(ind),8)]
+    
+    ax.set_xticks(ind + width /32)
+    ax.set_xticklabels(ticks)
+    plt.savefig(paths.plots_path8+provider+"_parkings_stats_"+column, bbox_inches = 'tight',pad_inches = 0.25)
+
+    plt.show()
 
 def return_path(cso, alg, ppz, z):
         string = str(cso) +"_"+ str(alg) + "_" + str(ppz) + "_"+ str(z)
         return string
 
+def plot_clorophlet_colorbar_solutions (my_city, provider, algorithm, column, z,ppz):
+    
+    if provider == "car2go":
+        color = "blue"
+        gdf = torino.car2go_parkings_analysis
+    else:
+        color = "red"
+        gdf = torino.enjoy_parkings_analysis
+    
+    gdf["taken"] = 0
+    k=torino.place_stations(z * ppz,
+                      ppz,
+                      provider,
+                      algorithm=algorithm,
+                     station_type=1)
+    k=k.keys()
+    gdf.loc[k, "taken"] = 1000
+    
+    
+    fig, ax = plt.subplots(1, 1, figsize=(10,10))
+    
+    cmap = colors.ListedColormap(['white', color])
+    gdf.plot(column="taken", cmap=cmap, ax=ax, linewidth=1)
+    if column == "avg_duration_per_zone":
+        algorithm = 'Average parking time per zone'
+    elif column == "parking_per_zone" :
+        algorithm = 'Parkings per zone [h]'
+    elif column == "duration_per_zone" :
+        algorithm = "Total durations per zone [h]"
+    else :
+        print "No column"
+        return
+    title = provider + " - chosen zone for " + algorithm +"\n"
+    title += "Zones: "+ str(z) + "; Power Supplies per zones: " + str(ppz)
+    plt.title(title, fontsize = 18)
+    ax.grid(linestyle='-', linewidth=1.0)
+    plt.xticks([])
+    plt.yticks([])
+#    plt.xlabel("Latitude", fontproperties=font)
+#    plt.ylabel("Longitude", fontproperties=font)
+
+    cax = fig.add_axes([0.9, 0.1, 0.03, 0.8,])
+    sm_ = plt.cm.ScalarMappable(cmap=cmap )
+    sm_._A = []
+    fig.colorbar(sm_, cax=cax)
+    cbar = plt.colorbar(sm_, cax=cax)
+    cbar.ax.tick_params(labelsize=14)
+    cbar.set_ticks([0.25,0.75])
+    cbar.set_ticklabels(["Not in solution", "In solution"])
+#    cbar.set_label('Mean car parking time per hour', rotation=270, fontsize=18, labelpad=30)
+#    gdf.apply(lambda x: ax.annotate(s=x.N, xy=(x.geometry.centroid.x, x.geometry.centroid.y), ha='center'),axis=1)
+    
+    fig.savefig(paths.plots_path8+provider+"_"+column, bbox_inches='tight',dpi=250)
+    plt.show()
+#    plt.savefig("clorophlet_" + str(column) + "_" + str(slot) + ".pdf", format="pdf")
+    
+    return
+
 if __name__ == "__main__":
-    # build the city ##
+    ### build the city ##
     year = 2017
     month = 5
     day = 6
@@ -108,16 +205,16 @@ if __name__ == "__main__":
     
     ## parameter for the parallel simulation ##
     n_z = range(5,205, 5)
-    n_ppz = [2,4,10]
+    n_ppz = [2,4,6]
     commands = {}
     j=0
-    for cso in ["car2go", "enjoy"]:
-        for alg in ["max_parking", "rnd", "max_avg_time"] :
+    for cso in ["car2go"]:
+        for alg in ["rnd"] :
             for ppz in n_ppz:
                 d = {}
                 d["alg"] = alg
                 d["ppz"] = ppz
-                d["out"] =  "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res/sym_res_"+str(j) 
+                d["out"] =  paths.sim_path_nrad+"sim_res_rand"+str(j) 
                 d["cso"] = cso
                 commands[j] = d
                 j=j+1
@@ -128,28 +225,65 @@ if __name__ == "__main__":
     process_list = []
     for i in commands.keys():
         node_sim_list.append(commands[i])
-#        
-#    ## run
-#    init_time = time.time()
-#    for node in node_sim_list:
-#        p = Process(target=worker, args=(node,))
-#        process_list.append(p)
-#        p.start()
-#    
-#    for p in process_list:
-#        p.join()
-#    print time.time() - init_time
+        
+    ## run
+    init_time = time.time()
+    for node in node_sim_list:
+        p = Process(target=worker, args=(node,))
+        process_list.append(p)
+        p.start()
+    
+    for p in process_list:
+        p.join()
+    print time.time() - init_time
     
     
     ## rebuilding the resutls
     res = pd.DataFrame()
     for node in node_sim_list:
         res = res.append(pd.read_pickle(node["out"]), ignore_index=True)
+            
       
-    plot_from_df(res, torino, "car2go", ["max_avg_time", "rnd", "max_parking"], 4, "tot" )
-    plot_from_df(res, torino, "enjoy", ["max_avg_time", "rnd", "max_parking"], 4, "tot" )
+#    plot_from_df(res, torino, "car2go", ["max_parking"], 4, "tot" )
+#    plot_from_df(res, torino, "enjoy", ["max_parking"], 4, "tot" )
     
-#    plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
-#    plot_from_df(res, "enjoy", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
+    #plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
+    #plot_from_df(res, "enjoy", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
+
+    
+#    bar_plot_parkings_stats(torino.car2go_parkings_analysis, "car2go", "parking_per_zone")
+#    bar_plot_parkings_stats(torino.car2go_parkings_analysis, "car2go", "duration_per_zone")
+#    bar_plot_parkings_stats(torino.car2go_parkings_analysis, "car2go", "avg_duration_per_zone")
+# 
+#    bar_plot_parkings_stats(torino.enjoy_parkings_analysis, "enjoy", "parking_per_zone")
+#    bar_plot_parkings_stats(torino.enjoy_parkings_analysis, "enjoy", "duration_per_zone")
+#    bar_plot_parkings_stats(torino.enjoy_parkings_analysis, "enjoy", "avg_duration_per_zone")
+    
+#    torino.car2go_parkings_analysis["taken"] = 0
+#    k=torino.place_stations(50 * 10,
+#                      10,
+#                      "car2go",
+#                      algorithm="max_parking",
+#                     station_type=1)
+#    k=set(k.keys())
+#    
+#    torino.car2go_parkings_analysis.loc[k, "taken"] = 1000
+#    plot_clorophlet_colorbar_solutions(torino, "car2go", "max_parking","parking_per_zone", 50, 10)
+#    plot_clorophlet_colorbar_solutions(torino, "enjoy","max_parking", "parking_per_zone", 50, 10)
+    
+    
+
+#    plot_clorophlet_colorbar_solutions(torino.car2go_parkings_analysis, "car2go", "duration_per_zone")
+#    plot_clorophlet_colorbar_solutions(torino.car2go_parkings_analysis, "car2go", "avg_duration_per_zone")
+#    
+#    plot_clorophlet_colorbar_solutions(torino.enjoy_parkings_analysis, "enjoy", "parking_per_zone")
+#    plot_clorophlet_colorbar_solutions(torino.enjoy_parkings_analysis, "enjoy", "duration_per_zone")
+#    plot_clorophlet_colorbar_solutions(torino.enjoy_parkings_analysis, "enjoy", "avg_duration_per_zone") 
+
+    
+    
+    
+
+    
 
 

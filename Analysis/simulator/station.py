@@ -10,6 +10,7 @@ class Station (object):
         self.max_cars = max_cars
         self.cars = cars
         self.set_station_profile(s_type)
+        self.charged_cars = pd.DataFrame(columns=["recharge"])
         return
     
     def __repr__(self):
@@ -45,4 +46,10 @@ class Station (object):
         else :
             self.s_type =3
             self.kw = 240.0
+            
+    def increase_recharged_counter(self, plate):
+        if plate not in self.charged_cars.index:
+            self.charged_cars.loc[plate, "recharge"] = 1
+        else:
+            self.charged_cars.loc[plate, "recharge"] = self.charged_cars.loc[plate, "recharge"] + 1
     
