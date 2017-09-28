@@ -26,3 +26,4 @@ plots_path8 = "/home/mc/Scrivania/Tesi/MyTool/plots/08/"
 
 sim_path_nrad = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_nrad/"
 sim_path_rnd = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_rnd"
+sym_path_3_alg_final ="/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_3_alg_no_rand_final"

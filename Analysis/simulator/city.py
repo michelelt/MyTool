@@ -231,31 +231,39 @@ class City (object):
         self.stations = stations
             
         if algorithm == "max_parking":
-#            print "caccca"
-            zones = df.sort_values("parking_per_zone", ascending=False)
-            zones = zones.iloc[0:max_stat,]
-            
-#            return zones
+            zones = df.sort_values("parking_per_zone", ascending=False).head(max_stat)
             for i in range(0,len(zones)):
                 zone = zones.iloc[[i]].index.get_values()[0]
-                stations[zone] = Station(zone, no_ps_per_station,0, station_type) 
-#            return df
+                stations[zone] = Station(zone, no_ps_per_station,0, station_type)
+#            print zones.index
         
         elif algorithm == "max_avg_time" :
-            zones = df.iloc[0:max_stat,]
+            zones = df.sort_values("avg_duration_per_zone", ascending=False).head(max_stat)
             for i in range(0,len(zones)):
                 zone = zones.iloc[[i]].index.get_values()[0]
-                stations[zone] = Station(zone, no_ps_per_station,0, station_type)            
-#            return df
-        
-        else: ## random o wrong ingress
+#                print zone
+                stations[zone] = Station(zone, no_ps_per_station,0, station_type) 
+#            print zones.index
+
+
+        elif algorithm == "max_time":
+            zones = df.sort_values("duration_per_zone", ascending=False).head(max_stat)
+            for i in range(0,len(zones)):
+                zone = zones.iloc[[i]].index.get_values()[0]
+                stations[zone] = Station(zone, no_ps_per_station,0, station_type)
+#            print zones.index
+
+
+        elif algorithm == "rnd": 
             seed = random.randint(1, 1e6)  % random.randint(1, 1e6) 
-#            np.random.seed(seed)
             zones = df.sample(n=max_stat, random_state=seed)
             for i in range(0,len(zones)):
                 zone = zones.iloc[[i]].index.get_values()[0]
                 stations[zone] = Station(zone, no_ps_per_station,0, station_type)
 #            print stations.keys()[0:10]
+        else:
+            print "error dionace"
+            return
         
         self.stations = stations
         
@@ -283,15 +291,19 @@ class City (object):
 #        for i in range (1, len(df)-1):
 #        df.drop("geometry",axis=1, inplace=True)
 #        df = pd.DataFrame(df)
+#        self.avg_bat_before = 0
+        self.avg_bat_after = 0
+        self.avg_bat_before = 0
         pieni = 0 
         for index, row in df.iterrows() :
 #            if i%10000 == 0:
 #                print i
-
             c_booking = row
             c_plate = str(c_booking["plate"])
             c_car = cars[c_plate]
             old_cap = c_car.current_capacity
+            
+            self.avg_bat_before = self.avg_bat_before + c_car.current_capacity
 
             if c_car.in_charge == True :
                 
@@ -301,6 +313,7 @@ class City (object):
                 stations[rech_z].increase_recharged_counter(c_plate)
                 c_car.compute_recharge(stations[rech_z], c_booking)
             
+
             if old_cap - c_car.current_capacity < 0:
                 pieni = pieni + 1
                 
@@ -324,9 +337,11 @@ class City (object):
 
             else:
                 refused_bookings +=1
+            self.avg_bat_after = self.avg_bat_after + c_car.current_capacity
+
         df = pd.DataFrame.from_records([cars[c].to_dict() for c in cars])
-        self.avg_bat =0
-        self.avg_bat = float(sum(df["current_capacity"]))/len(df)
+        self.avg_bat_after = self.avg_bat_after/len(df)
+        self.avg_bat_before = self.avg_bat_before/len(df)
 
         self.et = time.time()-s
         self.pieni = pieni
@@ -344,39 +359,54 @@ class City (object):
         
 
 
-year = 2017
-month = 5
-day = 6
-start = datetime.datetime(year, month, day, 0, 0, 0)
-end = datetime.datetime(year, month +2, day, 23, 59, 0)
-torino = City("Torino", start,end)
-torino.set_c2g_datasets(from_pickle=True)
-torino.set_enj_datasets(from_pickle=True)
-torino.get_fleet("car2go")
-torino.get_fleet("enjoy")
+#year = 2017
+#month = 5
+#day = 6
+#start = datetime.datetime(year, month, day, 0, 0, 0)
+#end = datetime.datetime(year, month +2, day, 23, 59, 0)
+#torino = City("Torino", start,end)
+#torino.set_c2g_datasets(from_pickle=True)
+#torino.set_enj_datasets(from_pickle=True)
+#torino.get_fleet("car2go")
+#torino.get_fleet("enjoy")
+##
+##ms = time.time()
+#print "max_parking ",
+#print torino.place_stations(20,
+#                      2,
+#                      "car2go",
+#                      "max_parking",
+#                      station_type=1).keys()
+#print
+#
+#print "max_avg_time"
+#print torino.place_stations(20,
+#                      2,
+#                      "car2go",
+#                      "max_avg_time",
+#                      station_type=1).keys()
+#print
+#
+#print "max_time "
+#print torino.place_stations(20,
+#                      2,
+#                      "car2go",
+#                      "max_time",
+#                      station_type=1).keys()
+#print
+#
+#zzz = torino.car2go_parkings_analysis
+#zzz2 = torino.car2go_parkings_analysis
 
-ms = time.time()
-torino.place_stations(1,
-                      10,
-                      "car2go",
-                      "max_parking",
-                      station_type=1)
-torino.run("car2go", 0)
-print time.time() - ms
-print torino.avg_bat
+#print torino.run("car2go", 0)["deaths"].sum()
+#print time.time() - ms
 
-ms = time.time()
-torino.place_stations(200,
-                      10,
-                      "car2go",
-                      "max_parking",
-                      station_type=1)
-torino.run("car2go", 0)
-
-print time.time() - ms
-print torino.avg_bat
-
-
+#zones = 17.0
+#ppz = 4
+#algs = 3
+#prov = 2
+#texec = 14
+#print zones* ppz* algs* prov
 
     
 #n_z = range(10,260, 50)

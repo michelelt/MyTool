@@ -20,7 +20,6 @@ from multiprocessing import Process
 import matplotlib.pyplot as plt
 from matplotlib import colors
 
-
 ## service functions
 def worker(node):
         resutls = pd.DataFrame()  
@@ -39,24 +38,28 @@ def worker(node):
             row["algorithm"] = node["alg"]
             row["mean_dpc"] = c2g_stats["deaths"].mean()
             row["median_dpc"] = c2g_stats["deaths"].median()
-            row["tot_deaths"] = c2g_stats["deaths"].sum()    
+            row["tot_deaths"] = c2g_stats["deaths"].sum()
+            row["pieni"] = torino.pieni
+            row["avg_bat_after"] = torino.avg_bat_after
+            row["avg_bat_before"] = torino.avg_bat_before
             resutls = resutls.append(row, ignore_index=True)
         resutls.to_pickle(node["out"])
 
-def plot_from_df (df, torino, provider, algorithm, ppz, parameter):
+def plot_from_df (df, torino, provider, algorithms, ppz, parameter):
         fig = plt.figure(figsize=(30,10))
-        colors = {"max_avg_time":"red", "max_parking":"blue", "rnd": "black"}
-    
+        colors = {"max_avg_time":"red", "max_parking":"blue", "max_time": "black"}
         ax = fig.gca()
         ax.set_title(provider + " Deaths prob. vs Zones with PS", fontsize=36)
         ax.grid()
-        
+     
         if provider == "car2go":
             nob = len(torino.car2go)
+            noz = float(len(torino.car2go_parkings_analysis))
         else:
             nob = len(torino.enjoy)
-        for alg in algorithm:
-        
+            noz = float(len(torino.enjoy_parkings_analysis))
+
+        for alg in algorithms:
             inside = df[
                 (df["provider"]==provider) &
                 (df["ppz"] == 2) &
@@ -65,30 +68,53 @@ def plot_from_df (df, torino, provider, algorithm, ppz, parameter):
                 ax.plot(inside["z"], inside["median_dpc"], color=colors[alg], label=alg)
                 ax.set_ylabel("Median number of death per car")
             else :
-                ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
-                        label=alg+" ppz=2", marker="o")
-                ax.set_ylabel("Total number of deaths")
+#                inside = df[
+#                (df["provider"]==provider) &
+#                (df["ppz"] == 2) &
+#                (df["algorithm"] == alg)]
+#                ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
+#                        label=alg+" ppz=2", marker="o")
+#                
+#                inside = df[
+#                    (df["provider"]==provider) &
+#                    (df["ppz"] == 4) &
+#                    (df["algorithm"] == alg)]
+#                ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
+#                        label=alg+" ppz=4", linestyle=":", marker="^")
+#
+#                
+#                inside = df[
+#                    (df["provider"]==provider) &
+#                    (df["ppz"] == 6) &
+#                    (df["algorithm"] == alg)]
+#                ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
+#                        label=alg+" ppz=6", linestyle="--", marker="x")
                 
                 inside = df[
                     (df["provider"]==provider) &
-                    (df["ppz"] == 4) &
+                    (df["ppz"] == 8) &
                     (df["algorithm"] == alg)]
                 ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
-                        label=alg+" ppz=4", linestyle=":", marker="^")
-
+                        label=alg+" ppz=8", linestyle="dotted", marker="D")
                 
-                inside = df[
-                    (df["provider"]==provider) &
-                    (df["ppz"] == 10) &
-                    (df["algorithm"] == alg)]
-                ax.plot(inside["z"], inside["tot_deaths"].div(nob), color=colors[alg], 
-                        label=alg+" ppz=10", linestyle="--", marker="x")
+        labels = [item.get_text() for item in ax.get_xticklabels()]
+        my_ticks = range(10,175,10)
+        my_tikcs = [str(("{0:.2f}".format(x/noz))) for x in my_ticks ]
+        for i in range(0,len(labels)):
+            labels[i] = my_tikcs[i]
+            
+        ax.set_xticklabels(labels)
+        for tick in ax.xaxis.get_major_ticks():
+                tick.label.set_fontsize(27) 
                 
-
+        for tick in ax.yaxis.get_major_ticks():
+                tick.label.set_fontsize(27) 
         
-        ax.set_xlabel("Total number of power supply")
+        ax.set_xlabel("Zones(%)", fontsize=36)
+        ax.set_ylabel("Deaths (%)", fontsize=36)
+
         plt.legend(fontsize=18)
-        plt.savefig(paths.plots_path8+provider+"_zone", bbox_inches = 'tight',pad_inches = 0.25)
+#        plt.savefig(paths.plots_path8+provider+"_zone", bbox_inches = 'tight',pad_inches = 0.25)
         plt.show()
         
 def bar_plot_parkings_stats (df1, provider, column):
@@ -191,7 +217,9 @@ def plot_clorophlet_colorbar_solutions (my_city, provider, algorithm, column, z,
     return
 
 if __name__ == "__main__":
-    ### build the city ##
+    ## build the city ##
+#    init_time = time.time()
+    
     year = 2017
     month = 5
     day = 6
@@ -204,17 +232,18 @@ if __name__ == "__main__":
     torino.get_fleet("enjoy")
     
     ## parameter for the parallel simulation ##
-    n_z = range(5,205, 5)
-    n_ppz = [2,4,6]
+    n_z = range(10,175, 10)
+    n_ppz = [2,4,6,8]
+    algorithms = ['max_parking', 'max_avg_time' ,'max_time']
     commands = {}
     j=0
     for cso in ["car2go"]:
-        for alg in ["rnd"] :
+        for alg in algorithms :
             for ppz in n_ppz:
                 d = {}
                 d["alg"] = alg
                 d["ppz"] = ppz
-                d["out"] =  paths.sim_path_nrad+"sim_res_rand"+str(j) 
+                d["out"] =  paths.sym_path_3_alg_final+"3_alg_fin_"+str(j) 
                 d["cso"] = cso
                 commands[j] = d
                 j=j+1
@@ -225,30 +254,30 @@ if __name__ == "__main__":
     process_list = []
     for i in commands.keys():
         node_sim_list.append(commands[i])
-        
-    ## run
-    init_time = time.time()
-    for node in node_sim_list:
-        p = Process(target=worker, args=(node,))
-        process_list.append(p)
-        p.start()
-    
-    for p in process_list:
-        p.join()
-    print time.time() - init_time
+#        
+#    ## run
+#    init_time = time.time()
+#    for node in node_sim_list:
+#        p = Process(target=worker, args=(node,))
+#        process_list.append(p)
+#        p.start()
+#    
+#    for p in process_list:
+#        p.join()
+#    print time.time() - init_time
     
     
     ## rebuilding the resutls
     res = pd.DataFrame()
     for node in node_sim_list:
         res = res.append(pd.read_pickle(node["out"]), ignore_index=True)
-            
-      
-#    plot_from_df(res, torino, "car2go", ["max_parking"], 4, "tot" )
+        
+#    zzz = res[res["algorithm"] == "duration_per_zone"]
+    plot_from_df(res, torino, "car2go", ['max_parking', 'max_avg_time' ,'max_time'], 4, "tot" )
 #    plot_from_df(res, torino, "enjoy", ["max_parking"], 4, "tot" )
-    
-    #plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
-    #plot_from_df(res, "enjoy", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
+#    
+#    plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
+#    plot_from_df(res, "enjoy", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
 
     
 #    bar_plot_parkings_stats(torino.car2go_parkings_analysis, "car2go", "parking_per_zone")
