@@ -43,7 +43,7 @@ def worker(node):
             row["avg_bat_after"] = torino.avg_bat_after
             row["avg_bat_before"] = torino.avg_bat_before
             resutls = resutls.append(row, ignore_index=True)
-        resutls.to_pickle(node["out"])
+#        resutls.to_pickle(node["out"])
 
 def plot_from_df (df, torino, provider, algorithms, ppz, parameter):
         fig = plt.figure(figsize=(30,10))
@@ -218,7 +218,7 @@ def plot_clorophlet_colorbar_solutions (my_city, provider, algorithm, column, z,
 
 if __name__ == "__main__":
     ## build the city ##
-#    init_time = time.time()
+    init_time = time.time()
     
     year = 2017
     month = 5
@@ -232,48 +232,50 @@ if __name__ == "__main__":
     torino.get_fleet("enjoy")
     
     ## parameter for the parallel simulation ##
-    n_z = range(10,175, 10)
+    n_z = range(10,175,10)
     n_ppz = [2,4,6,8]
-    algorithms = ['max_parking', 'max_avg_time' ,'max_time']
+#    algorithms = ['max_parking', 'max_time', 'max_avg_time']
+    algorithms = ["rnd"] * 5
     commands = {}
     j=0
-    for cso in ["car2go"]:
-        for alg in algorithms :
-            for ppz in n_ppz:
-                d = {}
-                d["alg"] = alg
-                d["ppz"] = ppz
-                d["out"] =  paths.sym_path_3_alg_final+"3_alg_fin_"+str(j) 
-                d["cso"] = cso
-                commands[j] = d
-                j=j+1
+    for k in range(1,11):
+        for cso in ["car2go", "enjoy"]:
+            for alg in algorithms :
+                for ppz in n_ppz:
+                    d = {}
+                    d["alg"] = alg
+                    d["ppz"] = ppz
+                    d["out"] =  paths.sim_path_rnd+"rnd_"+str(j) 
+                    d["cso"] = cso
+                    commands[j] = d
+                    j=j+1
+        
+        
+        ## builidng the coomand lists
+        node_sim_list=[]
+        process_list = []
+        for i in commands.keys():
+            node_sim_list.append(commands[i])
+            print commands[i]["out"]
+            
+        # run
+        for node in node_sim_list:
+            p = Process(target=worker, args=(node,))
+            process_list.append(p)
+            p.start()
+        
+        for p in process_list:
+            p.join()
+        print time.time() - init_time
     
     
-    ## builidng the coomand lists
-    node_sim_list=[]
-    process_list = []
-    for i in commands.keys():
-        node_sim_list.append(commands[i])
-#        
-#    ## run
-#    init_time = time.time()
-#    for node in node_sim_list:
-#        p = Process(target=worker, args=(node,))
-#        process_list.append(p)
-#        p.start()
-#    
-#    for p in process_list:
-#        p.join()
-#    print time.time() - init_time
-    
-    
-    ## rebuilding the resutls
+    # rebuilding the resutls
     res = pd.DataFrame()
     for node in node_sim_list:
         res = res.append(pd.read_pickle(node["out"]), ignore_index=True)
         
 #    zzz = res[res["algorithm"] == "duration_per_zone"]
-    plot_from_df(res, torino, "car2go", ['max_parking', 'max_avg_time' ,'max_time'], 4, "tot" )
+#    plot_from_df(res, torino, "car2go", ['max_parking', 'max_avg_time' ,'max_time'], 4, "tot" )
 #    plot_from_df(res, torino, "enjoy", ["max_parking"], 4, "tot" )
 #    
 #    plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 10, "tot" )
