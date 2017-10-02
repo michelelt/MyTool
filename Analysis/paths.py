@@ -22,8 +22,12 @@ plots_path4 = "/home/mc/Scrivania/Tesi/MyTool/plots/04/"
 plots_path6 = "/home/mc/Scrivania/Tesi/MyTool/plots/06/"
 plots_path7 = "/home/mc/Scrivania/Tesi/MyTool/plots/07/"
 plots_path8 = "/home/mc/Scrivania/Tesi/MyTool/plots/08/"
+plots_path9 = "/home/mc/Scrivania/Tesi/MyTool/plots/09/"
 
 
 sim_path_nrad = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_nrad/"
 sim_path_rnd = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_rnd/"
 sym_path_3_alg_final ="/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_3_alg_no_rand_final/"
+sym_path_best_rnd = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_best_rnd"
+sym_path_SOC = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_SOC/"
+sym_path_rnd_200_ppz_4 = "/home/mc/Scrivania/Tesi/MyTool/pickles/sym_res_rnd_200_ppz_4/"

@@ -277,12 +277,15 @@ class City (object):
             df = self.car2go
             cars = self.create_c2g_cars_collections()
             corrective_factor = 1.82
+            nob = len(self.car2go)
 
             
         if provider == "enjoy":
             df = self.enjoy
             cars = self.create_enj_cars_collections()
             corrective_factor = 1.82
+            nob = len(self.enjoy)
+
         
         stations = self.stations
         
@@ -304,6 +307,8 @@ class City (object):
             old_cap = c_car.current_capacity
             
             self.avg_bat_before = self.avg_bat_before + c_car.current_capacity
+            if c_car.current_capacity > c_car.capacity:
+                print index, c_car.plate, c_car.current_capacity
 
             if c_car.in_charge == True :
                 
@@ -340,8 +345,8 @@ class City (object):
             self.avg_bat_after = self.avg_bat_after + c_car.current_capacity
 
         df = pd.DataFrame.from_records([cars[c].to_dict() for c in cars])
-        self.avg_bat_after = self.avg_bat_after/len(df)
-        self.avg_bat_before = self.avg_bat_before/len(df)
+        self.avg_bat_after = self.avg_bat_after / nob
+        self.avg_bat_before = self.avg_bat_before / nob
 
         self.et = time.time()-s
         self.pieni = pieni
@@ -369,14 +374,16 @@ class City (object):
 #torino.set_enj_datasets(from_pickle=True)
 #torino.get_fleet("car2go")
 #torino.get_fleet("enjoy")
-##
+###
 ##ms = time.time()
 #print "max_parking ",
-#print torino.place_stations(20,
-#                      2,
+#torino.place_stations(90,
+#                      4,
 #                      "car2go",
 #                      "max_parking",
-#                      station_type=1).keys()
+#                      station_type=1)
+#torino.run('car2go', 0)
+#print torino.avg_bat_after, torino.avg_bat_before
 #print
 #
 #print "max_avg_time"

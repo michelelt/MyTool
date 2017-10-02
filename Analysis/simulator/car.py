@@ -44,7 +44,7 @@ class Car (object):
     def compute_recharge(self, station, cb):
         duration = (cb["init_time"] - self.last_booking["final_time"])/60/60 #in hour
         delta_c = duration * station.kw
-        if (self.current_capacity <= self.capacity):
+        if (self.current_capacity + delta_c <= self.capacity):
             self.current_capacity = self.current_capacity + delta_c
         else:
             self.current_capacity = self.capacity
