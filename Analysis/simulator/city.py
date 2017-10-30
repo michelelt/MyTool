@@ -229,7 +229,7 @@ class City (object):
         
         stations={}
         self.stations = stations
-            
+        print algorithm
         if algorithm == "max_parking":
             zones = df.sort_values("parking_per_zone", ascending=False).head(max_stat)
             for i in range(0,len(zones)):
@@ -262,7 +262,7 @@ class City (object):
                 stations[zone] = Station(zone, no_ps_per_station,0, station_type)
 #            print stations.keys()[0:10]
         else:
-            print "error dionace"
+            print "error"
             return
         
         self.stations = stations
@@ -307,8 +307,8 @@ class City (object):
             old_cap = c_car.current_capacity
             
             self.avg_bat_before = self.avg_bat_before + c_car.current_capacity
-            if c_car.current_capacity > c_car.capacity:
-                print index, c_car.plate, c_car.current_capacity
+#            if c_car.current_capacity > c_car.capacity:
+#                print index, c_car.plate, c_car.current_capacity
 
             if c_car.in_charge == True :
                 
@@ -374,6 +374,12 @@ class City (object):
 #torino.set_enj_datasets(from_pickle=True)
 #torino.get_fleet("car2go")
 #torino.get_fleet("enjoy")
+
+#print len(torino.car2go)/39.0/395
+#print len(torino.enjoy)/39.0/315
+#
+#print len(torino.car2go_parkings)/39.0/395
+#print len(torino.enjoy_parkings) /39.0/315
 ###
 ##ms = time.time()
 #print "max_parking ",
@@ -477,36 +483,6 @@ class City (object):
 #res = pd.DataFrame()
 #for node in node_sim_list:
 #    res = res.append(pd.read_pickle(node["out"]), ignore_index=True)
-#
-#
-#import matplotlib.pyplot as plt
-#resutls = pd.read_pickle("/home/mc/Scrivania/Tesi/MyTool/pickles/sym_results2")
-#def plot_from_df (df, provider, algorithm, ppz, parameter):
-#    fig = plt.figure(figsize=(10,10))
-#    colors = {"max_avg_time":"red", "max_parking":"blue", "rnd": "black"}
-#
-#    ax = fig.gca()
-#    ax.set_title("Deaths vs Number of PS", fontsize=36)
-#    for alg in algorithm:
-#    
-#        inside = df[
-#            (df["provider"]==provider) &
-#            (df["ppz"] == ppz) &
-#            (df["algorithm"] == alg)]
-#        if parameter == "median":
-#            ax.plot(inside["p"], inside["median_dpc"], color=colors[alg], label=alg)
-#            ax.set_ylabel("Median number of death per car")
-#        else :
-#            ax.plot(inside["p"], inside["tot_deaths"], color=colors[alg], label=alg)
-#            ax.set_ylabel("Total number of deaths")
-#    
-#    ax.set_xlabel("Total number of power supply")
-#    plt.legend(fontsize=18)
-##    plt.savefig(paths.)
-#    plt.show()
-#
-#plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 3, "tot" )
-#plot_from_df(res, "car2go", ["max_avg_time", "rnd", "max_parking"], 9, "tot" )
 
 
 

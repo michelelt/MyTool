@@ -22,31 +22,35 @@ from matplotlib import colors
 
 ## service functions
 def worker(node):
-        resutls = pd.DataFrame()  
-#        for z in n_z:
-        z=90
-        torino.place_stations(90*8,
-                              8,
-                              node["cso"],
-                              algorithm=node["alg"],
-                             station_type=1)
-        c2g_stats = torino.run(node["cso"], threshold=0)
-        row = pd.Series()
-        row["z"] = z
-        row["ppz"] = node["ppz"]
-        row["p"] = z*node["ppz"]
-        row["provider"] = node["cso"]
-        row["algorithm"] = node["alg"]
-        row["mean_dpc"] = c2g_stats["deaths"].mean()
-        row["median_dpc"] = c2g_stats["deaths"].median()
-        row["tot_deaths"] = c2g_stats["deaths"].sum()
-        row["pieni"] = torino.pieni
-        row["avg_bat_after"] = torino.avg_bat_after
-        row["avg_bat_before"] = torino.avg_bat_before
-        row["rech_cars"] = torino.rech_cars
-            
-        resutls = resutls.append(row, ignore_index=True)
-#        resutls.to_pickle(node["out"])
+        resutls = pd.DataFrame()
+        for cso in ["car2go", "enjoy"]:
+            for ppz in [2,4,6,8]:
+                for z in [30,60,90,120,150,180,210,238]:
+                    node['ppz'] = ppz
+                    node["cso"] = cso
+                    
+                    torino.place_stations(z*node["ppz"],
+                                          node['ppz'],
+                                          node["cso"],
+                                          algorithm=node["alg"],
+                                         station_type=1)
+                    c2g_stats = torino.run(node["cso"], threshold=0)
+                    row = pd.Series()
+                    row["z"] = z
+                    row["ppz"] = node["ppz"]
+                    row["p"] = z*node["ppz"]
+                    row["provider"] = node["cso"]
+                    row["algorithm"] = node["alg"]
+                    row["mean_dpc"] = c2g_stats["deaths"].mean()
+                    row["median_dpc"] = c2g_stats["deaths"].median()
+                    row["tot_deaths"] = c2g_stats["deaths"].sum()
+                    row["pieni"] = torino.pieni
+                    row["avg_bat_after"] = torino.avg_bat_after
+                    row["avg_bat_before"] = torino.avg_bat_before
+                    row["rech_cars"] = torino.rech_cars
+                    resutls = resutls.append(row, ignore_index=True)
+                    
+        resutls.to_pickle(node["out"])
 
 
 def return_path(cso, alg, ppz, z):
@@ -58,7 +62,6 @@ def return_path(cso, alg, ppz, z):
 if __name__ == "__main__":
     ## build the city ##
 
-    
     year = 2017
     month = 5
     day = 6
@@ -69,13 +72,16 @@ if __name__ == "__main__":
     torino.set_enj_datasets(from_pickle=True)
     torino.get_fleet("car2go")
     torino.get_fleet("enjoy")
+    
+    Series = torino.car2go_parkings_analysis.iloc[0]
+    DataFrame = torino.car2go_parkings_analysis
 
     
     # parameter for the parallel simulation ##
-#    n_z = range(10,175,10)
+#    n_z = [30,60,90,120,150,180,210,238]
 #    n_ppz = [2]
-#    algorithms = ['max_parking', 'max_time', 'max_avg_time']
-    algorithms = ["rnd"]
+    algorithms = ['max_parking', 'max_time', 'max_avg_time']
+#    algorithms = ["rnd"]
     commands = {}
     
     j= 0
@@ -87,9 +93,8 @@ if __name__ == "__main__":
 #            for ppz in n_ppz:
         d = {}
         d["alg"] = alg
-        d["ppz"] = 8
-        d["out"] =  paths.sim_path_rnd+"rnd_"+str(j) 
-        d["cso"] = 'car2go'
+        d["out"] =  paths.sym_path_bat+"bat_"+str(j) 
+#        d["cso"] = 'car2go'
         commands[j] = d
         j=j+1
         

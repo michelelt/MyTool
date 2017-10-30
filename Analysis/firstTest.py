@@ -13,23 +13,26 @@ dbp = DataBaseProxy()
 util = Utility()
 
 year = 2017
-month = 6
-day = 19
+month = 5
+day = 5
 
 #km macchine per enjoy e car2go in una settimana
 start = datetime.datetime(year, month, day, 0, 0, 0)
-end = datetime.datetime(year, month, day, 23, 59, 0)
+end = datetime.datetime(year, month+2, day, 23, 59, 0)
 
 #
 #enjoy = dbp.query_bookings_df("enjoy","Torino", start, end)
 #enjoy_p = dbp.query_parkings_df("enjoy", "Torino", start,end)
-#enjoy_2 = enjoy[enjoy["duration"]< 120]
-#enjoy_2.duration.hist(bins=50, color='red')
+##enjoy_2 = enjoy[enjoy["duration"]< 120]
+##enjoy_2.duration.hist(bins=50, color='red')
 #car2go = dbp.query_bookings_df("car2go","Torino", start, end)
 #car2go_p = dbp.query_parkings_df("car2go","Torino", start, end)
 
-#enjoy.to_pickle(paths.enjoy_pickle_path, None)
-#car2go.to_pickle(paths.car2go_pickle_path, None)
+#enjoy.to_pickle(paths.enjoy_bookings_pickle_path, None)
+#car2go.to_pickle(paths.car2go_bookings_pickle_path, None)
+#
+#enjoy_p.to_pickle(paths.enjoy_parkings_pickle_path, None)
+#car2go_p.to_pickle(paths.car2go_parkings_pickle_path, None)
 
 def clean_distances(df):
     df = df[df.distance >1]
@@ -255,35 +258,56 @@ def gd_vs_ed_hist(df_dist, provider, color):
     return
     
 
-#enjoy = pd.read_pickle(paths.enjoy_pickle_path, None)
-#car2go = pd.read_pickle(paths.car2go_pickle_path, None)
+enjoy = pd.read_pickle(paths.enjoy_bookings_pickle_path, None)
+car2go = pd.read_pickle(paths.car2go_bookings_pickle_path, None)
 enj_data = {}
 c2g_data = {}
-#enj_data["general"] = util.get_valid_days(enjoy,start,end)
-#c2g_data["general"] = util.get_valid_days(car2go,start,end)
+enj_data["general"] = util.get_valid_days(enjoy,start,end)
+c2g_data["general"] = util.get_valid_days(car2go,start,end)
+
+enj_bookings = len(pd.read_pickle(paths.enjoy_bookings_pickle_path))
+enj_parkings = len(pd.read_pickle(paths.enjoy_parkings_pickle_path))
+enj_cars = len(enjoy.plate.unique())
+enj_days = 35.0
+
+print "enj B/D " + str(enj_bookings/enj_days)
+print "enj_B/D/C " + str(enj_bookings/enj_days/enj_cars)
+print "enj P/D " + str(enj_parkings/enj_days)
+print "enj P/D/C " + str(enj_parkings/enj_days/enj_cars)
+print
+c2g_bookings = len(pd.read_pickle(paths.car2go_bookings_pickle_path))
+c2g_parkings = len(pd.read_pickle(paths.car2go_parkings_pickle_path))
+c2g_cars = len(car2go.plate.unique())
+c2g_days = 38.0
+
+print "c2g B/D " + str(c2g_bookings/c2g_days)
+print "c2g B/D/C " + str(c2g_bookings/c2g_days/c2g_cars)
+print "c2g P/D " + str(c2g_parkings/c2g_days)
+print "c2g P/D/C " + str(c2g_parkings/c2g_days/c2g_cars)
 
 
 
 
-#valid_days(enjoy)
-#valid_days(car2go)
+valid_days(enjoy)
+valid_days(car2go)
 
-#enj_dist = distances_per_car(enjoy)
-##total_dist_per_car_no_outliers(enjoy)
-#enj_data["distance"] = hist_cdf_pdf(
-#        enjoy, 
-#        enj_dist, 
-#        "distance", 
-#        enj_data["general"]["valid_days"], 
-#        enj_data["general"]["cleaned_valid_days"]
-#        )
-#enj_data["duration"] = hist_cdf_pdf(
-#        enjoy, 
-#        enj_dist, 
-#        "duration", 
-#        enj_data["general"]["valid_days"], 
-#        enj_data["general"]["cleaned_valid_days"]
-#        )
+
+enj_dist = distances_per_car(enjoy)
+#total_dist_per_car_no_outliers(enjoy)
+enj_data["distance"] = hist_cdf_pdf(
+        enjoy, 
+        enj_dist, 
+        "distance", 
+        enj_data["general"]["valid_days"], 
+        enj_data["general"]["cleaned_valid_days"]
+        )
+enj_data["duration"] = hist_cdf_pdf(
+        enjoy, 
+        enj_dist, 
+        "duration", 
+        enj_data["general"]["valid_days"], 
+        enj_data["general"]["cleaned_valid_days"]
+        )
 
 
 ##fuel_behavior_max_distnace(enjoy)
@@ -405,6 +429,8 @@ fuel consuption vs distnace eucl
 #
 #fig.savefig(paths.plots_path3+"_scatter_fuel_diff.png", bbox_inches='tight')
 #fig.show()
+
+
 
 
 
